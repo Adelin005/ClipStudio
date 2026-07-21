@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViralClip Studio — Video Social Media Generator</title>
+  <meta name="description" content="Generate viral TikTok & Instagram Reels content with AI-powered clip mixing, text overlays, and custom music. Free, no copyright issues." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Animated background -->
+    <div class="bg-animation">
+      <div class="bg-orb bg-orb-1"></div>
+      <div class="bg-orb bg-orb-2"></div>
+      <div class="bg-orb bg-orb-3"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon">🎬</span>
+        <span class="logo-text">ViralClip<span class="logo-accent">Studio</span></span>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <button class="nav-step active" data-step="1" id="nav-step-1">
+          <span class="step-number">1</span>
+          <span class="step-label">Sursă Video</span>
+          <span class="step-check">✓</span>
+        </button>
+        <button class="nav-step" data-step="2" id="nav-step-2">
+          <span class="step-number">2</span>
+          <span class="step-label">Adaugă Muzică</span>
+          <span class="step-check">✓</span>
+        </button>
+        <button class="nav-step" data-step="3" id="nav-step-3">
+          <span class="step-number">3</span>
+          <span class="step-label">Text Overlay</span>
+          <span class="step-check">✓</span>
+        </button>
+        <button class="nav-step" data-step="4" id="nav-step-4">
+          <span class="step-number">4</span>
+          <span class="step-label">Preview & Export</span>
+          <span class="step-check">✓</span>
+        </button>
+
+        <div style="height:1px;background:var(--glass-border);margin:8px 4px;"></div>
+
+        <button class="nav-step nav-step-special" data-step="5" id="nav-step-5" style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(236,72,153,0.15));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius);">
+          <span class="step-number" style="background:var(--gradient-1);border:none;color:#fff;font-size:14px;">⚡</span>
+          <span class="step-label" style="color:var(--text-primary);font-weight:700;">Auto Mode</span>
+        </button>
+
+        <button class="nav-step" data-step="6" id="nav-step-6">
+          <span class="step-number" style="font-size:14px;">📚</span>
+          <span class="step-label">Istoric Video</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="api-key-section" style="margin-bottom: 15px;">
+          <input type="password" id="pexels-api-key" placeholder="Pexels API Key" class="form-input" style="width: 100%; font-size: 12px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: var(--text-primary); border-radius: 6px; margin-bottom: 8px;" />
+          <input type="password" id="groq-api-key" placeholder="Groq API Key (Script AI)" class="form-input" style="width: 100%; font-size: 12px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: var(--text-primary); border-radius: 6px; margin-bottom: 8px;" />
+          <input type="password" id="elevenlabs-api-key" placeholder="ElevenLabs API Key (Voice AI)" class="form-input" style="width: 100%; font-size: 12px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: var(--text-primary); border-radius: 6px; margin-bottom: 8px;" />
+          <p style="font-size: 10px; color: var(--text-muted); margin-top: 5px; text-align: center;">Salvează automat în browser</p>
+        </div>
+        <p class="footer-text">100% gratuit • Fără copyright</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+      <!-- Step panels are rendered dynamically -->
+    </main>
+
+    <!-- Removed Pexels API Key Modal -->
+
+    <!-- Toast notifications -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

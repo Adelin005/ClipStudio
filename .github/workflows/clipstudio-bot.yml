@@ -1,0 +1,43 @@
+name: ClipStudio Auto Bot
+
+on:
+  schedule:
+    # Rulează la fiecare 5 minute pentru a verifica butoanele de Start/Stop din Telegram
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Permite pornirea manuală din interfața GitHub
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necesar pentru a salva state.json
+
+    steps:
+      - name: Checkout cod
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Instalează dependențe
+        run: |
+          cd server
+          npm install
+
+      - name: Rulează Bot-ul & Generează Video
+        run: |
+          cd server
+          node generate.js
+        env:
+          # Acestea trebuie adăugate în GitHub -> Settings -> Secrets and variables -> Actions -> New repository secret
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+
+      - name: Salvează starea botului (state.json)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update bot state [skip ci]"
+          file_pattern: server/state.json
