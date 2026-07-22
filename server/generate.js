@@ -109,13 +109,19 @@ async function fetchQuote() {
 }
 
 async function fetchVideo() {
-    const queries = ['luxury sports car night city', 'luxury villa pool', 'private jet interior', 'luxury penthouse'];
-    const q = queries[Math.floor(Math.random() * queries.length)];
-    const res = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(q)}&orientation=portrait&per_page=15`, { headers: { Authorization: PEXELS_API_KEY } });
-    const data = await res.json();
-    const v = data.videos?.sort(() => Math.random() - 0.5)[0];
-    const file = v?.video_files?.find(f => f.quality === 'sd' && f.width < f.height) || v?.video_files?.[0];
-    return file.link;
+    const fallbackUrl = 'https://videos.pexels.com/video-files/857032/857032-sd_640_360_30fps.mp4';
+    try {
+        const queries = ['luxury sports car night city', 'luxury villa pool', 'private jet interior', 'luxury penthouse'];
+        const q = queries[Math.floor(Math.random() * queries.length)];
+        const res = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(q)}&orientation=portrait&per_page=15`, { headers: { Authorization: PEXELS_API_KEY } });
+        if (!res.ok) return fallbackUrl;
+        const data = await res.json();
+        const v = data.videos?.sort(() => Math.random() - 0.5)[0];
+        const file = v?.video_files?.find(f => f.quality === 'sd' && f.width < f.height) || v?.video_files?.[0];
+        return file?.link || fallbackUrl;
+    } catch (e) {
+        return fallbackUrl;
+    }
 }
 
 function download(url, dest) {
@@ -131,6 +137,13 @@ function download(url, dest) {
     });
 }
 
+const FONT_PATH = path.join(os.tmpdir(), 'Roboto-Bold.ttf');
+async function ensureFont() {
+    if (!fs.existsSync(FONT_PATH)) {
+        await download('https://github.com/google/fonts/raw/main/ofl/roboto/Roboto-Bold.ttf', FONT_PATH);
+    }
+}
+
 function runFFmpeg(inputPath, outputPath, quote) {
     return new Promise((resolve, reject) => {
         const { lines, style } = quote;
@@ -139,12 +152,15 @@ function runFFmpeg(inputPath, outputPath, quote) {
         const startY = Math.round(1920 / 2 - (lines.length * lineH + (lines.length - 1) * gap) / 2 + lineH / 2);
         
         const escFF = t => t.replace(/\\/g, '\\\\').replace(/'/g, '\u2019').replace(/:/g, '\\:').replace(/,/g, '\\,').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
-        const vf = ['scale=1080:1920:force_original_aspect_ratio=increase', 'crop=1080:1920:0:0', ...lines.map((l, i) => `drawtext=text='${escFF(l)}':fontsize=${fontSize}:fontcolor=${fontColor}:x=(w-tw)/2:y=${startY + i * (lineH + gap)}:borderw=13:bordercolor=black@0.93:shadowx=2:shadowy=3:font=bold`)].join(',');
+        const safeFontPath = FONT_PATH.replace(/\\/g, '/').replace(/:/g, '\\:');
+        const vf = ['scale=1080:1920:force_original_aspect_ratio=increase', 'crop=1080:1920:0:0', ...lines.map((l, i) => `drawtext=fontfile='${safeFontPath}':text='${escFF(l)}':fontsize=${fontSize}:fontcolor=${fontColor}:x=(w-tw)/2:y=${startY + i * (lineH + gap)}:borderw=13:bordercolor=black@0.93:shadowx=2:shadowy=3`)].join(',');
 
         const args = ['-y', '-i', inputPath, '-t', '20', '-vf', vf, '-c:v', 'libx264', '-preset', 'fast', '-crf', '26', '-pix_fmt', 'yuv420p', '-an', '-movflags', '+faststart', outputPath];
         
         const proc = spawn(ffmpegPath, args);
-        proc.on('close', code => code === 0 ? resolve() : reject(new Error('FFmpeg error ' + code)));
+        let errLog = '';
+        if (proc.stderr) proc.stderr.on('data', d => errLog += d.toString());
+        proc.on('close', code => code === 0 ? resolve() : reject(new Error('FFmpeg error ' + code + ' - ' + errLog)));
     });
 }
 
@@ -192,6 +208,7 @@ async function main() {
                 const quote = await fetchQuote();
                 const url = await fetchVideo();
                 await download(url, inputPath);
+                await ensureFont();
                 await runFFmpeg(inputPath, outputPath, quote);
                 await sendVideo(chatIdStr, outputPath, quote.lines.join(' '));
                 
