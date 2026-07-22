@@ -1,9 +1,10 @@
 {
-  "lastUpdateId": 927696041,
+  "lastUpdateId": 927696042,
   "chats": {
     "2121232636": {
-      "isRunning": false,
-      "lastGenMs": 0
+      "isRunning": true,
+      "lastGenMs": 0,
+      "intervalMs": 300000
     }
   }
 }
