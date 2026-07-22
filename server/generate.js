@@ -22,7 +22,6 @@ if (!BOT_TOKEN) {
 }
 
 const STATE_FILE = path.join(__dirname, 'state.json');
-const AUTO_INTERVAL_MS = 30 * 60 * 1000; // 30 minute
 
 // ── Incarcă Starea ──────────────────────────────────────────
 let state = { lastUpdateId: 0, chats: {} };
@@ -41,10 +40,11 @@ async function getUpdates() {
     return data.result || [];
 }
 
-async function sendMessage(chatId, text, isRunning) {
-    const keyboard = isRunning
-        ? [[{ text: '🛑 Oprește Auto Mode' }]]
-        : [[{ text: '▶️ Pornește Auto Mode' }]];
+async function sendMessage(chatId, text) {
+    const keyboard = [
+        [{ text: '⚡ 5min auto generate' }, { text: '🕒 30min auto generate' }],
+        [{ text: '🛑 stop auto' }]
+    ];
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -64,7 +64,7 @@ async function sendMessage(chatId, text, isRunning) {
 async function sendVideo(chatId, videoPath, caption) {
     const stat = fs.statSync(videoPath);
     if (stat.size > 50 * 1024 * 1024) {
-        await sendMessage(chatId, `🎬 **Video Generat**\n\n💬 _"${caption}"_\n\n⚠️ Video prea mare (>50MB).`, true);
+        await sendMessage(chatId, `🎬 **Video Generat**\n\n💬 _"${caption}"_\n\n⚠️ Video prea mare (>50MB).`);
         return;
     }
 
@@ -176,15 +176,21 @@ async function main() {
         const text = u.message.text;
         const chatId = u.message.chat.id;
 
-        if (!state.chats[chatId]) state.chats[chatId] = { isRunning: false, lastGenMs: 0 };
+        if (!state.chats[chatId]) state.chats[chatId] = { isRunning: false, lastGenMs: 0, intervalMs: 30 * 60 * 1000 };
 
-        if (text.includes('/start') || text.includes('Pornește')) {
+        if (text.includes('5min') || text.includes('5 minute')) {
             state.chats[chatId].isRunning = true;
-            await sendMessage(chatId, '🟢 **Auto Mode PORNIT!**\nVoi genera clipuri o dată la 30 minute.', true);
-            // Dacă au trecut mai puțin de 30 min, se va genera direct jos în buclă
-        } else if (text.includes('/stop') || text.includes('Oprește')) {
+            state.chats[chatId].intervalMs = 5 * 60 * 1000;
+            await sendMessage(chatId, '⚡ **Auto Mode PORNIT!**\nVoi genera clipuri o dată la 5 minute.');
+        } else if (text.includes('30min') || text.includes('30 minute') || text.includes('/start') || text.includes('Pornește')) {
+            state.chats[chatId].isRunning = true;
+            state.chats[chatId].intervalMs = 30 * 60 * 1000;
+            await sendMessage(chatId, '🕒 **Auto Mode PORNIT!**\nVoi genera clipuri o dată la 30 minute.');
+        } else if (text.includes('stop') || text.includes('/stop') || text.includes('Oprește')) {
             state.chats[chatId].isRunning = false;
-            await sendMessage(chatId, '🔴 **Auto Mode OPRIT!**\nNu voi mai trimite clipuri automat.', false);
+            await sendMessage(chatId, '🛑 **Auto Mode OPRIT!**\nNu voi mai trimite clipuri automat.');
+        } else {
+            await sendMessage(chatId, 'Alege o opțiune de mai jos pentru a controla frecvența clipurilor:');
         }
     }
 
@@ -195,8 +201,9 @@ async function main() {
     for (const [chatIdStr, chatState] of Object.entries(state.chats)) {
         if (!chatState.isRunning) continue;
 
+        const interval = chatState.intervalMs || 30 * 60 * 1000;
         const timeSinceLastGen = Date.now() - chatState.lastGenMs;
-        if (timeSinceLastGen >= AUTO_INTERVAL_MS || chatState.lastGenMs === 0) {
+        if (timeSinceLastGen >= interval || chatState.lastGenMs === 0) {
             console.log(`Generez video pentru chat ${chatIdStr}...`);
             
             const tmpDir = os.tmpdir();
