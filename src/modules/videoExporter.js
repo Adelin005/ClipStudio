@@ -13,40 +13,63 @@ export function renderExportPanel(container, state, onBack) {
       <h1 class="step-title">Preview & Export</h1>
       <p class="step-subtitle">Configurează setările finale și exportă videoclipul tău. Procesarea se face 100% în browser.</p>
     </div>
+    
     <div class="export-layout">
-      <div>
-        <div class="preview-phone" id="preview-container">
+      <div style="display:flex; flex-direction:column; align-items:center; gap: 24px;">
+        <div class="preview-phone-frame" id="preview-container">
           <canvas id="preview-canvas" width="1080" height="1920"></canvas>
         </div>
-        <div class="preview-controls">
-          <button class="btn btn-secondary" id="btn-preview-play">▶ Preview</button>
-        </div>
+        <button class="btn btn-outline" id="btn-preview-play">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Play Preview
+        </button>
       </div>
+      
       <div class="export-settings">
-
-        <div class="export-card">
-          <h4>📋 Sumar</h4>
-          <div id="clip-summary" style="font-size:13px;color:var(--text-secondary);line-height:1.8;"></div>
+        <div class="premium-card" style="margin-bottom: 24px;">
+          <h4 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:-4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Sumar
+          </h4>
+          <div id="clip-summary" style="font-size:14px;color:var(--text-secondary);line-height:1.8;"></div>
         </div>
-        <div class="export-card" id="clip-plan-card">
-          <h4>🎬 Plan Clipuri</h4>
+        
+        <div class="premium-card" id="clip-plan-card" style="margin-bottom: 24px;">
+          <h4 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:-4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Plan Clipuri
+          </h4>
           <div class="clip-list" id="clip-list"></div>
         </div>
-        <div class="export-card" id="export-progress-card" style="display:none;">
-          <h4>⏳ Export în progres</h4>
-          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-          <p class="progress-text" id="progress-text">Se inițializează FFmpeg...</p>
+        
+        <div class="premium-card" id="export-progress-card" style="display:none; margin-bottom: 24px; border-color:var(--primary); background:rgba(99,102,241,0.05);">
+          <h4 class="section-title" style="color:var(--primary);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:-4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Export în progres...
+          </h4>
+          <div class="progress-bar-container"><div class="progress-fill" id="progress-fill"></div></div>
+          <p id="progress-text" style="font-size:13px; color:var(--text-secondary); margin-top:12px; text-align:center;">Se inițializează...</p>
         </div>
-        <button class="btn btn-primary btn-lg btn-block" id="btn-generate">
-          🚀 Generează & Exportă Video
+        
+        <button class="btn btn-primary btn-lg btn-block" id="btn-generate" style="font-size: 16px; padding: 18px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          Generează & Exportă Video
         </button>
-        <div id="download-section" style="display:none;margin-top:12px;">
-          <button class="btn btn-secondary btn-lg btn-block" id="btn-download">📥 Descarcă Video</button>
+        
+        <div id="download-section" style="display:none; margin-top:16px;">
+          <button class="btn btn-secondary btn-lg btn-block" id="btn-download" style="font-size: 16px; padding: 18px; border-color: var(--success); color: var(--success);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Descarcă Video
+          </button>
         </div>
       </div>
     </div>
+    
     <div class="step-actions">
-      <button class="btn btn-ghost" id="btn-back-5">← Înapoi</button>
+      <button class="btn btn-outline btn-lg" id="btn-back-5">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Înapoi
+      </button>
       <div></div>
     </div>
   `;

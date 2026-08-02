@@ -88,18 +88,37 @@ async function fetchQuote() {
     try {
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
             body: JSON.stringify({
-                model: 'llama3-8b-8192',
+                model: 'llama-3.3-70b-versatile',
                 messages: [{
                     role: 'system',
-                    content: 'Scrie UN SINGUR gând dur despre bani în română. MAXIM 3 Linii, max 7 cuv/linie. Returnează STRICT JSON: {"lines": ["linie 1", "linie 2"]}'
-                }, { role: 'user', content: 'Citat provocator.' }],
+                    content: `Ești un copywriter viral. Scrie UN SINGUR mesaj scurt în română, cu un adevăr brutal despre bani.
+Aici ai exemple EXACTE de ton, format și atitudine. Folosește STRICT același stil (3 linii scurte, ironie, duritate).
+Ex 1: {"lines": ["Ai ultimul iPhone,", "dar intri în panică", "dacă întârzie salariul 3 zile."]}
+Ex 2: {"lines": ["Mașina în rate", "te face să pari bogat.", "Dar te ține sărac."]}
+Ex 3: {"lines": ["Te vaiți că nu ai bani,", "dar stai pe TikTok", "4 ore pe zi."]}
+Ex 4: {"lines": ["Dacă investeai cât ai băut", "în ultimii 5 ani,", "azi erai liber."]}
+Ex 5: {"lines": ["Hainele de firmă", "nu ascund faptul că", "contul tău e pe zero."]}
+Ex 6: {"lines": ["Muncești 40 de ore pe săptămână", "pentru visul șefului tău.", "Pentru tine câte ore muncești?"]}
+
+REGULI CRITICE:
+- MAXIM 3 linii.
+- MAXIM 7 cuvinte pe linie.
+- Doar diacritice corecte.
+- FĂRĂ metafore gen "arma" sau "jug". Fii concret (haine, card, rate).
+- Returnează STRICT JSON valid de forma: {"lines": ["l1", "l2", "l3"]}`
+                }, { role: 'user', content: 'Citat brutal și original despre educație financiară, care nu e în lista de exemple.' }],
                 temperature: 0.9, max_tokens: 150
             })
         });
         const data = await res.json();
-        const match = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+        const messageContent = data.choices?.[0]?.message?.content;
+        if (!messageContent) return fallback;
+        const match = messageContent.match(/\{[\s\S]*\}/);
         if (match) {
             const parsed = JSON.parse(match[0]);
             if (parsed.lines?.length) return { lines: parsed.lines, style: Math.random() > 0.5 ? 'gold' : 'white' };

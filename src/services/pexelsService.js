@@ -13,12 +13,17 @@ export async function fetchPexelsVideos(prompt, apiKey, neededCount) {
       }
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Eroare Pexels API: ${res.status} ${res.statusText}`);
+    const rawText = await res.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      throw new Error('Eroare rețea/parsare răspuns Pexels: ' + rawText.substring(0, 100));
     }
 
-    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(`Eroare Pexels API: ${res.status} ${res.statusText}`);
+    }
     
     if (!data.videos || data.videos.length === 0) {
       throw new Error(`Nu am găsit niciun video pentru promptul: "${prompt}"`);

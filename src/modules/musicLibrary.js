@@ -7,30 +7,37 @@ export function renderMusicLibrary(container, state, onNext, onBack) {
       <p class="step-subtitle">Alege muzica de fundal pentru videoclipul tău din biblioteca noastră locală. Poți ajusta volumul.</p>
     </div>
     
-    <div class="export-card">
+    <div class="premium-card">
       <div id="music-loading" style="text-align:center; padding:40px 20px; color:var(--text-muted);">
         <div class="spinner"></div>
-        <p>Se încarcă biblioteca muzicală...</p>
+        <p style="margin-top: 16px;">Se încarcă biblioteca muzicală...</p>
       </div>
       <div id="music-list-container" style="display:none;">
         <div class="music-list" id="music-list" style="max-height:400px; overflow-y:auto; padding-right:8px;"></div>
       </div>
     </div>
     
-    <div class="glass-card" style="margin-top:20px;">
+    <div class="premium-card" style="margin-top:24px; padding: 24px;">
       <div class="range-group">
-        <div class="range-header">
-          <span class="input-label">🔊 Volum Muzică</span>
-          <span class="range-value" id="vol-value">${Math.round((state.musicVolume || 0.7) * 100)}%</span>
+        <div class="range-header" style="display:flex; justify-content:space-between; margin-bottom: 12px;">
+          <span class="input-label" style="margin:0; display:flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            Volum Muzică
+          </span>
+          <span class="range-value" id="vol-value" style="font-weight:700; color:var(--primary);">${Math.round((state.musicVolume || 0.7) * 100)}%</span>
         </div>
         <input type="range" id="music-volume" min="0" max="100" value="${Math.round((state.musicVolume || 0.7) * 100)}" />
       </div>
     </div>
+    
     <div class="step-actions">
-      <button class="btn btn-ghost" id="btn-back-3">← Înapoi</button>
+      <button class="btn btn-outline btn-lg" id="btn-back-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Înapoi
+      </button>
       <button class="btn btn-primary btn-lg" id="btn-next-3">
         Continuă
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
       </button>
     </div>
   `;
@@ -45,7 +52,16 @@ export function renderMusicLibrary(container, state, onNext, onBack) {
       if (state.musicTracks.length === 0) {
         const res = await fetch('/assets-manifest.json');
         if (!res.ok) throw new Error('Eroare la încărcarea manifestului de fișiere.');
-        const data = await res.json();
+        
+        const text = await res.text();
+        let data;
+        try {
+          if (text.trim().startsWith('<')) throw new Error('Răspuns invalid (HTML)');
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Eroare la parsarea manifestului (assets-manifest.json lipsește sau e invalid).');
+        }
+        
         const urls = data.music || [];
         
         state.musicTracks = urls.map(url => ({

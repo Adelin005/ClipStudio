@@ -1,0 +1,38 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+
+# Proxy Cloudflare AI API — înlocuiește proxy-ul Vite care nu există pe Netlify
+[[redirects]]
+  from = "/cf-api/*"
+  to = "https://api.cloudflare.com/:splat"
+  status = 200
+  force = true
+
+# SPA fallback — toate rutele merg la index.html
+# IMPORTANT: Funcțiile Netlify trebuie excluse din catch-all!
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headere necesare pentru FFmpeg WASM (SharedArrayBuffer)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"

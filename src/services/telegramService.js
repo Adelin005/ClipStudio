@@ -11,11 +11,17 @@ export async function sendTelegramMessage(chatId, text) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.description || 'Eroare Telegram sendMessage');
+  const rawText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch (e) {
+    throw new Error('Eroare rețea Telegram (posibil blocat/indisponibil)');
   }
-  return await res.json();
+  if (!res.ok) {
+    throw new Error(data.description || 'Eroare Telegram sendMessage');
+  }
+  return data;
 }
 
 /**
@@ -42,16 +48,23 @@ export async function sendTelegramVideo(chatId, videoBlob, caption = '') {
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
   const formData = new FormData();
   formData.append('chat_id', chatId);
-  formData.append('video', videoBlob, 'viralclip.webm');
+  const ext = videoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+  formData.append('video', videoBlob, `viralclip.${ext}`);
   if (caption) formData.append('caption', caption);
   formData.append('parse_mode', 'HTML');
 
   const res = await fetch(url, { method: 'POST', body: formData });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.description || 'Eroare Telegram sendVideo');
+  const rawText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch (e) {
+    throw new Error('Eroare rețea Telegram (sendVideo)');
   }
-  return await res.json();
+  if (!res.ok) {
+    throw new Error(data.description || 'Eroare Telegram sendVideo');
+  }
+  return data;
 }
 
 /**

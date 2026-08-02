@@ -8,19 +8,20 @@ export function renderHistoryPanel(container) {
       <p class="step-subtitle">Toate videoclipurile generate automat. Descarcă sau șterge după nevoie.</p>
     </div>
     <div id="history-toolbar" style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap;">
-      <button class="btn btn-secondary" id="btn-refresh-history" style="gap:8px;">
+      <button class="btn btn-outline" id="btn-refresh-history" style="gap:8px; padding: 10px 16px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Reîncarcă
       </button>
-      <button class="btn" id="btn-clear-history" style="gap:8px;color:var(--danger);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);">
-        🗑️ Șterge Tot
+      <button class="btn" id="btn-clear-history" style="gap:8px; padding: 10px 16px; color:var(--danger); background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Șterge Tot
       </button>
-      <span id="history-count" style="font-size:13px;color:var(--text-muted);margin-left:auto;"></span>
+      <span id="history-count" style="font-size:14px;font-weight:600;color:var(--text-secondary);margin-left:auto;"></span>
     </div>
     <div id="history-grid" class="history-video-grid">
       <div class="empty-state">
         <span class="empty-icon">🎬</span>
-        <p>Se încarcă istoricul...</p>
+        <p style="margin-top: 16px;">Se încarcă istoricul...</p>
       </div>
     </div>
   `;
@@ -110,7 +111,8 @@ async function loadHistory() {
         const url = URL.createObjectURL(entry.blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `clipstudio_auto_${entry.id}.webm`;
+        const ext = entry.blob.type.includes('mp4') ? 'mp4' : 'webm';
+        a.download = `clipstudio_auto_${entry.id}.${ext}`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);

@@ -9,54 +9,60 @@ export function renderNicheSelector(container, state, onSelect) {
       <p class="step-subtitle">Alege între videoclipuri Luxury pre-generate sau folosește Custom Video AI pentru a genera un videoclip din orice prompt.</p>
     </div>
     
-    <div class="niche-grid" id="mode-grid" style="grid-template-columns: repeat(2, 1fr); max-width: 800px; margin: 0 auto;">
+    <div class="niche-grid" id="mode-grid">
       
       <!-- Luxury Mode -->
-      <div class="niche-card ${state.aiMode === 'luxury' ? 'selected' : ''}" data-mode="luxury" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-        <span class="niche-icon" style="font-size: 3rem;">💎</span>
-        <h3 class="niche-title" style="font-size: 1.5rem; margin-top: 15px;">Luxury Videos</h3>
-        <p class="niche-desc" style="margin-top: 10px;">Folosește colecția noastră locală de videoclipuri premium cu mașini sport, vile și călătorii. Gratuit și offline.</p>
+      <div class="niche-card ${state.aiMode === 'luxury' ? 'selected' : ''}" data-mode="luxury">
+        <span class="niche-icon">💎</span>
+        <h3 class="niche-title">Luxury Videos</h3>
+        <p class="niche-desc">Folosește colecția noastră locală de videoclipuri premium cu mașini sport, vile și călătorii. Gratuit și offline.</p>
       </div>
 
       <!-- Custom AI Mode -->
-      <div class="niche-card ${state.aiMode === 'custom' ? 'selected' : ''}" data-mode="custom" style="display: flex; flex-direction: column; align-items: center; text-align: center; border-color: var(--primary-color);">
-        <span class="niche-icon" style="font-size: 3rem;">🤖</span>
-        <h3 class="niche-title" style="font-size: 1.5rem; margin-top: 15px;">Custom Video AI</h3>
-        <p class="niche-desc" style="margin-top: 10px;">Scrie un prompt, iar AI-ul nostru va căuta și îmbina videoclipurile perfecte de pe internet pentru tine.</p>
+      <div class="niche-card ${state.aiMode === 'custom' ? 'selected' : ''}" data-mode="custom">
+        <span class="niche-icon">🤖</span>
+        <h3 class="niche-title">Custom Video AI</h3>
+        <p class="niche-desc">Scrie un prompt, iar AI-ul nostru va căuta și îmbina videoclipurile perfecte de pe internet pentru tine.</p>
       </div>
 
     </div>
 
     <!-- Custom AI Prompt Input -->
-    <div id="custom-prompt-container" style="display: ${state.aiMode === 'custom' ? 'block' : 'none'}; max-width: 600px; margin: 30px auto 0;">
-      <h3 style="margin-bottom: 10px; font-size: 1.1rem; color: var(--text-color);">Prompt pentru AI:</h3>
-      <textarea id="ai-prompt" class="form-input" rows="3" placeholder="Ex: ocean waves crashing on rocks, cinematic, 4k..." style="width: 100%; resize: vertical;">${state.promptText || ''}</textarea>
+    <div id="custom-prompt-container" style="display: ${state.aiMode === 'custom' ? 'block' : 'none'}; max-width: 640px; margin: 40px auto 0;">
+      <div class="prompt-area">
+        <label class="input-label">Prompt pentru AI:</label>
+        <textarea id="ai-prompt" class="form-input" rows="3" placeholder="Ex: ocean waves crashing on rocks, cinematic, 4k..." style="resize: vertical;">${state.promptText || ''}</textarea>
+      </div>
       
       <!-- Container pentru revizuirea scriptului AI -->
-      <div id="script-review-container" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px;">
-        <h4 style="margin-bottom: 15px; color: var(--primary-color);">Revizuiește Scriptul AI</h4>
-        <div id="script-scenes-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
-        <button class="btn btn-primary btn-block" id="btn-approve-script" style="margin-top: 20px;">✅ Aprobă & Generează Vocea</button>
+      <div id="script-review-container" style="display: none; margin-top: 24px; padding: 24px; border-radius: var(--radius-lg); background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);">
+        <h4 class="section-title" style="color: var(--primary);">Revizuiește Scriptul AI</h4>
+        <div id="script-scenes-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
+        <button class="btn btn-primary btn-block" id="btn-approve-script" style="margin-top: 24px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          Aprobă & Generează
+        </button>
       </div>
     </div>
     
-    <div class="duration-selector" id="duration-selector" style="display:${state.aiMode ? 'block' : 'none'}; margin-top:40px; text-align:center;">
-      <h3 style="margin-bottom: 15px; font-size: 1.2rem; color: var(--text-color);">Alege Durata Clipului</h3>
-      <div style="display:flex; gap:15px; justify-content:center;">
+    <div class="duration-selector" id="duration-selector" style="display:${state.aiMode ? 'block' : 'none'};">
+      <h3 class="section-title" style="margin-bottom: 16px; color: var(--text-secondary);">Alege Durata Clipului</h3>
+      <div class="duration-btns">
         <button class="btn btn-outline dur-btn ${state.totalDuration === 10 ? 'active' : ''}" data-dur="10">10s</button>
         <button class="btn btn-outline dur-btn ${state.totalDuration === 15 ? 'active' : ''}" data-dur="15">15s</button>
         <button class="btn btn-outline dur-btn ${state.totalDuration === 20 ? 'active' : ''}" data-dur="20">20s</button>
       </div>
     </div>
 
-    <div class="step-actions" style="margin-top: 40px;">
-      <div id="loading-container" style="display: none; align-items: center; gap: 10px; color: var(--primary-color);">
-        <div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
-        <span id="loading-text">Se procesează...</span>
+    <div class="step-actions">
+      <div id="loading-container" style="display: none; align-items: center; gap: 12px; color: var(--primary);">
+        <div class="spinner"></div>
+        <span id="loading-text" style="font-weight: 600; font-size: 15px;">Se procesează...</span>
       </div>
+      <div style="flex:1"></div>
       <button class="btn btn-primary btn-lg" id="btn-next-1" ${(!state.aiMode || !state.totalDuration) ? 'disabled' : ''}>
         Continuă
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
       </button>
     </div>
   `;
@@ -130,9 +136,17 @@ export function renderNicheSelector(container, state, onSelect) {
         
         const res = await fetch('/assets-manifest.json');
         if (!res.ok) throw new Error('Eroare la citirea manifestului de fișiere locale.');
-        const data = await res.json();
         
-        const allUrls = data.videos['luxury'] || [];
+        const text = await res.text();
+        let data;
+        try {
+          if (text.trim().startsWith('<')) throw new Error('Răspuns invalid (HTML)');
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Eroare la parsarea manifestului (assets-manifest.json lipsește sau e invalid).');
+        }
+        
+        const allUrls = data.videos?.['luxury'] || [];
         
         if (allUrls.length === 0) {
           throw new Error('Nu există videoclipuri disponibile pentru nișa luxury.');

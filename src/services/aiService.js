@@ -39,25 +39,6 @@ Respond ONLY with a valid JSON array. No extra text, no markdown, no explanation
   const url = `https://api.groq.com/openai/v1/chat/completions`;
 
   try {
-    // Auto-detect available Groq model
-    let modelName = 'llama3-8b-8192'; // fallback
-    try {
-      const modelsRes = await fetch('https://api.groq.com/openai/v1/models', {
-        headers: { 'Authorization': `Bearer ${apiKey}` }
-      });
-      if (modelsRes.ok) {
-        const modelsData = await modelsRes.json();
-        const models = modelsData.data.map(m => m.id);
-        // Exclude whisper, guard (classification), and tool models if possible
-        const preferred = models.find(m => m.includes('llama') && !m.includes('whisper') && !m.includes('guard') && !m.includes('tool')) 
-                          || models.find(m => m.includes('mixtral')) 
-                          || models[0];
-        if (preferred) modelName = preferred;
-      }
-    } catch (e) {
-      console.warn("Eroare la auto-detectia modelelor Groq:", e);
-    }
-
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -65,7 +46,7 @@ Respond ONLY with a valid JSON array. No extra text, no markdown, no explanation
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: modelName,
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
@@ -75,18 +56,30 @@ Respond ONLY with a valid JSON array. No extra text, no markdown, no explanation
       })
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Eroare la generarea script-ului cu Groq.');
+    const rawText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      throw new Error('Eroare rețea/parsare răspuns Groq (Posibil server over capacity): ' + rawText.substring(0, 100));
     }
 
-    const data = await response.json();
-    let content = data.choices[0].message.content.trim();
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Eroare la generarea script-ului cu Groq API.');
+    }
+    if (data.error) {
+      throw new Error(`Groq Error: ${data.error.message}`);
+    }
+    const messageContent = data.choices?.[0]?.message?.content;
+    if (!messageContent) {
+      throw new Error(`Groq a returnat un răspuns gol sau invalid. Detalii: ${JSON.stringify(data)}`);
+    }
+    let content = messageContent.trim();
     
     // Strip markdown code blocks if present
     content = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
     
-    // Extract JSON array from content (handles extra text before/after)
+    // Extract JSON array
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       console.error("No JSON array found in response:", content);
@@ -108,7 +101,7 @@ Respond ONLY with a valid JSON array. No extra text, no markdown, no explanation
       throw new Error('Eroare la parsarea răspunsului de la AI. Încearcă din nou.');
     }
   } catch (err) {
-    console.error("OpenAI API Error:", err);
+    console.error("Gemini API Error:", err);
     throw err;
   }
 }
@@ -138,8 +131,15 @@ export async function generateVoiceover(text, apiKey) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail?.message || 'Eroare la generarea voiceover-ului cu ElevenLabs.');
+    const errorText = await response.text();
+    let errorMessage = 'Eroare la generarea voiceover-ului cu ElevenLabs.';
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage = errorJson.detail?.message || errorJson.message || errorMessage;
+    } catch (e) {
+      errorMessage += ` (${response.status} ${response.statusText})`;
+    }
+    throw new Error(errorMessage);
   }
 
   return await response.blob();

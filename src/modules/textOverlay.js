@@ -36,54 +36,66 @@ export function renderTextOverlay(container, state, onNext, onBack) {
           <canvas class="text-preview-canvas" id="text-canvas" width="360" height="640"></canvas>
         </div>
       </div>
-      <div class="text-controls">
-        <div class="settings-panel">
-        <h3 class="panel-title">Stilizare Text</h3>
+      <div class="editor-controls">
+        <h3 class="section-title">Stilizare Text</h3>
         
-        <div class="form-group" id="global-text-group" style="display: ${state.aiMode === 'custom' ? 'none' : 'block'};">
-          <label class="form-label">Text de afișat pe video</label>
+        <div class="control-group" id="global-text-group" style="display: ${state.aiMode === 'custom' ? 'none' : 'block'}; margin-bottom: 24px;">
+          <label class="input-label">Text de afișat pe video</label>
           <textarea id="text-input" class="form-input" rows="3" placeholder="Scrie ceva captivant...">${ts.text}</textarea>
         </div>
         
-        ${state.aiMode === 'custom' ? '<div style="margin-bottom:15px; font-size:12px; color:var(--primary-color);">ℹ️ Textul va fi extras automat din scenariul AI pentru fiecare scenă în parte. Folosește setările de mai jos doar pentru a-i schimba aspectul.</div>' : ''}
-        <div class="input-group">
+        ${state.aiMode === 'custom' ? '<div style="margin-bottom:24px; font-size:13px; color:var(--primary); background:rgba(99,102,241,0.1); padding:12px; border-radius:var(--radius-sm); border:1px solid rgba(99,102,241,0.2);">ℹ️ Textul va fi extras automat din scenariul AI pentru fiecare scenă în parte. Folosește setările de mai jos doar pentru a-i schimba aspectul.</div>' : ''}
+        
+        <div class="control-group">
           <label class="input-label">🔤 Font</label>
           <div class="font-grid" id="font-grid"></div>
         </div>
-        <div class="range-group">
-          <div class="range-header">
-            <span class="input-label">📏 Mărime</span>
-            <span class="range-value" id="size-val">${ts.size}px</span>
+        
+        <div class="control-group">
+          <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+            <label class="input-label" style="margin:0;">📏 Mărime</label>
+            <span id="size-val" style="font-size:13px; font-weight:700; color:var(--primary);">${ts.size}px</span>
           </div>
           <input type="range" id="font-size" min="16" max="96" value="${ts.size}" />
         </div>
-        <div class="input-group">
+        
+        <div class="control-group">
           <label class="input-label">🎨 Culori</label>
           <div class="color-row">
-            <input type="color" class="color-input" id="text-color" value="${ts.color}" title="Text" />
-            <span style="font-size:13px;color:var(--text-secondary)">Text</span>
-            <input type="color" class="color-input" id="stroke-color" value="${ts.stroke}" title="Outline" />
-            <span style="font-size:13px;color:var(--text-secondary)">Outline</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" class="color-input" id="text-color" value="${ts.color}" title="Text" />
+              <span style="font-size:13px;color:var(--text-secondary)">Text</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-left: 12px;">
+              <input type="color" class="color-input" id="stroke-color" value="${ts.stroke}" title="Outline" />
+              <span style="font-size:13px;color:var(--text-secondary)">Outline</span>
+            </div>
           </div>
         </div>
-        <div class="range-group">
-          <div class="range-header">
-            <span class="input-label">Grosime Outline</span>
-            <span class="range-value" id="stroke-val">${ts.strokeWidth}px</span>
+        
+        <div class="control-group">
+          <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+            <label class="input-label" style="margin:0;">Grosime Outline</label>
+            <span id="stroke-val" style="font-size:13px; font-weight:700; color:var(--primary);">${ts.strokeWidth}px</span>
           </div>
           <input type="range" id="stroke-width" min="0" max="10" value="${ts.strokeWidth}" />
         </div>
-        <div class="input-group">
+        
+        <div class="control-group" style="margin-bottom:0;">
           <label class="input-label">📍 Poziție</label>
           <div class="position-grid" id="pos-grid"></div>
         </div>
       </div>
     </div>
+    
     <div class="step-actions">
-      <button class="btn btn-ghost" id="btn-back-4">← Înapoi</button>
+      <button class="btn btn-outline btn-lg" id="btn-back-4">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Înapoi
+      </button>
       <button class="btn btn-primary btn-lg" id="btn-next-4">
         Continuă la Preview
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
       </button>
     </div>
   `;
