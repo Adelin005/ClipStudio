@@ -1,5 +1,3 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 const https = require('https');
 const admin = require('firebase-admin');
 
@@ -48,7 +46,7 @@ if (!admin.apps.length) {
   }
 }
 
-export const handler = async (event, context) => {
+exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -61,7 +59,7 @@ export const handler = async (event, context) => {
     }
 
     const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_URL } = process.env;
-    const apiUrl = PAYPAL_API_URL || 'https://api-m.paypal.com'; // Default: LIVE
+    const apiUrl = PAYPAL_API_URL || 'https://api-m.paypal.com'; // Default: LIVE (nu sandbox!)
 
     console.log(`[capture-paypal-order] API URL: ${apiUrl}`);
     console.log(`[capture-paypal-order] Order token: ${token}`);

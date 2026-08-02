@@ -1,5 +1,3 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 const https = require('https');
 
 // Helper to make HTTP requests without external dependencies
@@ -30,7 +28,7 @@ function request(url, options, bodyData) {
   });
 }
 
-export const handler = async (event, context) => {
+exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -53,14 +51,14 @@ export const handler = async (event, context) => {
     }
 
     const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_URL } = process.env;
-    const apiUrl = PAYPAL_API_URL || 'https://api-m.paypal.com'; // Default: LIVE
+    const apiUrl = PAYPAL_API_URL || 'https://api-m.paypal.com'; // Default: LIVE (nu sandbox!)
     const baseUrl = process.env.URL || 'http://localhost:5173';
 
     console.log(`[create-paypal-order] API URL: ${apiUrl}`);
     console.log(`[create-paypal-order] Base URL: ${baseUrl}`);
 
     if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-      console.error('[create-paypal-order] Missing PayPal credentials in environment variables!');
+      console.error('[create-paypal-order] Missing PayPal credentials!');
       return {
         statusCode: 500,
         body: JSON.stringify({ error: 'PayPal credentials not configured in environment.' })
@@ -93,7 +91,7 @@ export const handler = async (event, context) => {
       intent: 'CAPTURE',
       purchase_units: [{
         amount: { currency_code: 'USD', value: priceValue },
-        custom_id: JSON.stringify({ uid, planId }) // Store user info to retrieve during capture
+        custom_id: JSON.stringify({ uid, planId })
       }],
       payment_source: {
         paypal: {
