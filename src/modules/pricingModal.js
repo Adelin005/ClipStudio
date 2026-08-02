@@ -56,7 +56,7 @@ function _buildHTML(currentPlan) {
             <div class="pricing-plan-icon">🆓</div>
             <div class="pricing-plan-name">Free</div>
             <div class="pricing-plan-price">
-              <span class="pricing-amount">$0</span>
+              <span class="pricing-amount">0€</span>
               <span class="pricing-period">Lifetime</span>
             </div>
           </div>
@@ -78,7 +78,7 @@ function _buildHTML(currentPlan) {
             <div class="pricing-plan-icon">⚡</div>
             <div class="pricing-plan-name">Basic</div>
             <div class="pricing-plan-price">
-              <span class="pricing-amount">$10</span>
+              <span class="pricing-amount">10€</span>
               <span class="pricing-period">Lifetime</span>
             </div>
           </div>
@@ -104,7 +104,7 @@ function _buildHTML(currentPlan) {
             <div class="pricing-plan-icon">👑</div>
             <div class="pricing-plan-name">Pro</div>
             <div class="pricing-plan-price">
-              <span class="pricing-amount">$20</span>
+              <span class="pricing-amount">20€</span>
               <span class="pricing-period">Lifetime</span>
             </div>
           </div>

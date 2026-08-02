@@ -90,7 +90,7 @@ exports.handler = async (event, context) => {
     const orderBody = JSON.stringify({
       intent: 'CAPTURE',
       purchase_units: [{
-        amount: { currency_code: 'USD', value: priceValue },
+        amount: { currency_code: 'EUR', value: priceValue },
         custom_id: JSON.stringify({ uid, planId })
       }],
       payment_source: {
