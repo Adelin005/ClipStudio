@@ -98,7 +98,8 @@ exports.handler = async (event, context) => {
           experience_context: {
             return_url: `${baseUrl}/?checkout=success`,
             cancel_url: `${baseUrl}/?checkout=cancel`,
-            user_action: 'PAY_NOW'
+            user_action: 'PAY_NOW',
+            landing_page: 'GUEST_CHECKOUT'
           }
         }
       }
