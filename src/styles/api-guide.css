@@ -181,3 +181,38 @@
   transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.35);
 }
 .guide-done-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .api-guide-modal {
+    padding: 24px 20px;
+    border-radius: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .guide-step-block {
+    flex-direction: column;
+  }
+  .guide-step-num {
+    margin-bottom: 8px;
+  }
+  .guide-overview-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+  .guide-ov-arrow {
+    display: none;
+  }
+  .guide-ov-tags {
+    justify-content: center;
+  }
+  .api-guide-nav {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .api-guide-btn-back, .api-guide-btn-next {
+    width: 100%;
+    justify-content: center;
+  }
+}

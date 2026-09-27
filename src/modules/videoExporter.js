@@ -473,8 +473,6 @@ async function exportWithCanvasRecorder(clipPlan, ts, hasText, hasMusic, state, 
       reject(new Error('Eroare MediaRecorder: ' + e.error));
     };
 
-    recorder.start(100); // collect chunks every 100ms
-
     let clipIdx = 0;
     const video = document.createElement('video');
     video.muted = true;
@@ -545,6 +543,10 @@ async function exportWithCanvasRecorder(clipPlan, ts, hasText, hasMusic, state, 
       });
       
       video.play().catch(() => {});
+
+      if (idx === 0) {
+        recorder.start(100); // collect chunks every 100ms
+      }
 
       // Record this clip for its duration
       const clipDurationMs = clip.duration * 1000;

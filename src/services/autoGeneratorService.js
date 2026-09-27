@@ -101,16 +101,9 @@ const HUMAN_MONEY_QUOTES = [
 
 // Query-uri Pexels de fallback (dacă localul nu ajunge)
 const PEXELS_LUXURY_QUERIES = [
-  'luxury sports car night city',
-  'luxury villa swimming pool sunset',
-  'private jet interior luxury',
-  'luxury yacht ocean',
-  'luxury penthouse view city night',
-  'expensive watch close up gold',
-  'luxury hotel suite interior',
-  'lamborghini ferrari driving road',
-  'luxury lifestyle mansion',
-  'rolex watch luxury',
+  'nature',
+  'city',
+  'car'
 ];
 
 // ====================================================================
@@ -369,15 +362,25 @@ ${urgency}`;
 /**
  * Rulează întregul proces de generare automată
  */
-export async function runFullAutoGeneration({ cfAccountId, cfApiToken, pexelsApiKey, onProgress }) {
+export async function runFullAutoGeneration({ cfAccountId, cfApiToken, pexelsApiKey, scriptSource, manualScripts, onProgress }) {
   const log = (msg, pct) => {
     console.log(`[AutoGen] ${msg}`);
     if (onProgress) onProgress(msg, pct);
   };
 
-  // 1. Generăm un citat uman
-  log('✍️ AI scrie un citat natural...', 5);
-  const quote = await generateHumanQuote(cfAccountId, cfApiToken);
+  // 1. Obținem textul (AI sau Manual)
+  let quote;
+  if (scriptSource === 'manual') {
+    if (!manualScripts || manualScripts.length === 0) {
+      throw new Error('Nu ai scripturi manuale încărcate. Te rugăm să încarci un fișier JSON.');
+    }
+    log('📝 Se folosește text din fișierul manual JSON...', 5);
+    const manualLines = manualScripts[0];
+    quote = { lines: manualLines, style: 'white' };
+  } else {
+    log('✍️ AI scrie un citat natural...', 5);
+    quote = await generateHumanQuote(cfAccountId, cfApiToken);
+  }
 
   // 2. Încărcăm videoclipurile locale luxury
   log('🎬 Se încarcă videoclipuri locale...', 15);
@@ -505,7 +508,6 @@ async function exportAutoVideo(scenes, quote, onProgress) {
       }
     };
     recorder.onerror = e => reject(new Error('MediaRecorder: ' + e.error));
-    recorder.start(100);
 
     const video = document.createElement('video');
     video.muted = true;
@@ -535,10 +537,10 @@ async function exportAutoVideo(scenes, quote, onProgress) {
 
     // ─── Calculează font size optim ───
     function calcFontSize(wrappedLines, maxWidth) {
-      let size = 48;
-      const minSize = 40;
+      let size = 42; // Mărime micșorată inițial 48 -> 42
+      const minSize = 34; // Minimul proporțional mai mic
       while (size >= minSize) {
-        const font = `900 ${size}px "Outfit", "Inter", sans-serif`;
+        const font = `700 ${size}px "Montserrat", sans-serif`; // Font schimbat în Montserrat
         ctx.font = font;
         const fits = wrappedLines.every(l => ctx.measureText(l).width <= maxWidth);
         if (fits) return size;
@@ -552,13 +554,19 @@ async function exportAutoVideo(scenes, quote, onProgress) {
       const PAD = 90; // padding lateral
       const maxWidth = canvas.width - PAD * 2;
 
-      // 1. Wrap fiecare linie în sub-linii dacă e prea lungă
-      const tempFont = '900 48px "Outfit", "Inter", sans-serif';
-      const wrappedLines = lines.flatMap(l => wrapLine(l, maxWidth, tempFont));
+      // 1. Wrap fiecare linie în sub-linii dacă e prea lungă și ținem minte dacă aparține ultimei propoziții originale
+      const tempFont = '700 42px "Montserrat", sans-serif';
+      const wrappedLines = [];
+      lines.forEach((origLine, origIndex) => {
+        const subLines = wrapLine(origLine, maxWidth, tempFont);
+        const isOrigLastLine = origIndex === lines.length - 1;
+        subLines.forEach(sl => {
+          wrappedLines.push({ text: sl, isLastLine: isOrigLastLine });
+        });
+      });
 
       // 2. Calculăm font size-ul optim
-      const fontSize = calcFontSize(wrappedLines, maxWidth);
-      const fontFace = `900 ${fontSize}px "Outfit", "Inter", sans-serif`;
+      const fontSize = calcFontSize(wrappedLines.map(w => w.text), maxWidth);
       const lineHeight = fontSize * 1.45;
       const gap = Math.max(8, fontSize * 0.18);
 
@@ -570,10 +578,17 @@ async function exportAutoVideo(scenes, quote, onProgress) {
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
 
-      wrappedLines.forEach((line, i) => {
+      wrappedLines.forEach((item, i) => {
+        const isLastLine = item.isLastLine;
+        const line = item.text;
         const lineY = startY + i * (lineHeight + gap);
 
-        ctx.font = fontFace;
+        // Ultima linie (toate bucățile ei) e boldată mai tare (900) pentru a ieși în evidență, restul la 700
+        const currentFontFace = isLastLine 
+          ? `900 ${fontSize + 2}px "Montserrat", sans-serif`
+          : `700 ${fontSize}px "Montserrat", sans-serif`;
+
+        ctx.font = currentFontFace;
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
 
@@ -586,10 +601,10 @@ async function exportAutoVideo(scenes, quote, onProgress) {
         ctx.shadowOffsetY = 4;
         ctx.strokeText(line, cx, lineY);
 
-        // ── Fill text (alb pur) ──
+        // ── Fill text (galben pentru a o scoate maxim în evidență pe ultima) ──
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = isLastLine ? '#FDE047' : '#FFFFFF';
         ctx.fillText(line, cx, lineY);
       });
     }
@@ -616,7 +631,34 @@ async function exportAutoVideo(scenes, quote, onProgress) {
         setTimeout(res, 6000);
       });
 
-      video.play().catch(() => {});
+      await video.play().catch(() => {});
+
+      // Pentru a evita frame-uri negre la început, așteptăm ca videoul să aibă cadre efective
+      if (idx === 0) {
+        // Așteptăm ca videoclipul să avanseze măcar un pic pentru a garanta că a fost decodat primul cadru vizual (nu mai primim negru la drawImage)
+        let attempts = 0;
+        while (video.currentTime === 0 && attempts < 50) {
+          await new Promise(r => requestAnimationFrame(r));
+          attempts++;
+        }
+        
+        // Desenăm forțat primul cadru complet înainte să pornim MediaRecorder
+        if (video.videoWidth > 0) {
+          const vW = video.videoWidth, vH = video.videoHeight;
+          const scale = Math.max(canvas.width / vW, canvas.height / vH);
+          const dW = vW * scale, dH = vH * scale;
+          ctx.drawImage(video, (canvas.width - dW) / 2, (canvas.height - dH) / 2, dW, dH);
+        } else {
+          ctx.fillStyle = '#080810';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawTextLines(quote.lines);
+        
+        recorder.start(100);
+      }
 
       const clipMs = scene.duration * 1000;
       const t0 = performance.now();

@@ -13,7 +13,7 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, onSnapshot, increment } from 'firebase/firestore';
 
 // ─── Firebase Config ──────────────────────────────────────────────────
 const firebaseConfig = {
@@ -89,7 +89,12 @@ onAuthStateChanged(auth, (fbUser) => {
       } else {
         _currentPlanId = 'free';
         // Initialize doc if missing
-        setDoc(doc(db, 'users', fbUser.uid), { plan: 'free', email: fbUser.email }, { merge: true }).catch(console.error);
+        setDoc(doc(db, 'users', fbUser.uid), { 
+          plan: 'free', 
+          email: fbUser.email,
+          hasGenerated: false,
+          totalGenerated: 0
+        }, { merge: true }).catch(console.error);
       }
       _authListeners.forEach(cb => cb(_toPublicUser(fbUser)));
     });
@@ -137,7 +142,9 @@ export async function register(email, password) {
     setDoc(doc(db, 'users', cred.user.uid), {
       plan: 'free',
       email: cred.user.email,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      hasGenerated: false,
+      totalGenerated: 0
     }, { merge: true }).catch(err => {
       console.warn("Nu s-a putut salva planul in Firestore. Verifica daca baza de date este activata.", err);
     });
@@ -227,6 +234,18 @@ export function incrementDailyCount() {
   const key   = `viralclip_daily_${uid}_${_todayKey()}`;
   const count = parseInt(localStorage.getItem(key) || '0', 10);
   localStorage.setItem(key, String(count + 1));
+
+  try {
+    const userRef = doc(db, 'users', uid);
+    setDoc(userRef, {
+      hasGenerated: true,
+      totalGenerated: increment(1),
+      lastGenerationDate: new Date().toISOString(),
+      [`dailyCount_${_todayKey()}`]: increment(1)
+    }, { merge: true }).catch(err => console.error("Eroare sync Firestore", err));
+  } catch (err) {
+    console.error("Eroare sync Firestore", err);
+  }
 }
 
 // ─── Private helpers ──────────────────────────────────────────────────

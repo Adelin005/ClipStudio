@@ -11,6 +11,21 @@ let generationCount = 0;
 let targetCount = 1;
 let selectedQty = 1;
 
+// Manual Script state
+let scriptSource = 'ai'; // 'ai' or 'manual'
+let manualScripts = []; // List of string arrays
+
+// Load existing manual scripts from localStorage on init
+try {
+  const saved = localStorage.getItem('viralclip_manual_scripts');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      manualScripts = parsed;
+    }
+  }
+} catch (e) {}
+
 // Persistent log buffer — survives navigation away and back
 const LOG_MAX = 150;
 let logBuffer = []; // { time: string, msg: string }[]
@@ -88,6 +103,56 @@ export function renderAutoPanel(container, state, onGoToHistory) {
       </div>
     </div>
 
+    <!-- Script Source Selector -->
+    <div class="premium-card script-source-card" style="margin-bottom: 24px;">
+      <h3 class="section-title">📝 Sursă Script</h3>
+      <div style="display:flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+        <button class="btn btn-outline${scriptSource === 'ai' ? ' active' : ''}" id="btn-src-ai" style="flex:1; min-width: 140px;">🤖 AI (Groq)</button>
+        <button class="btn btn-outline${scriptSource === 'manual' ? ' active' : ''}" id="btn-src-manual" style="flex:1; min-width: 140px;">📁 Manual (JSON)</button>
+      </div>
+      
+      <div id="manual-script-area" style="display:${scriptSource === 'manual' ? 'block' : 'none'}; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+        <div id="manual-upload-ui" style="display:${manualScripts.length === 0 ? 'block' : 'none'};">
+          <p style="font-size:14px; color:var(--text-secondary); margin-bottom:12px;">Încarcă un fișier JSON cu prompturi. Exemplu structură corectă:</p>
+          <pre style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; font-size: 11px; color: #a5b4fc; overflow-x: auto; margin-bottom: 16px; text-align: left; line-height: 1.4;">[
+  {
+    "lines": [
+      "La 18 ani credeam că la 25 o să am tot ce mi-am dorit.",
+      "Că banii vin singuri dacă muncești din greu.",
+      "Realitatea m-a lovit în față pe la 23.",
+      "Tu credeai la fel sau ai înțeles mai repede?"
+    ]
+  },
+  {
+    "lines": [
+      "Cineva mi-a spus la 20 de ani: o să ai totul la 30.",
+      "Am crezut. Am muncit. Am așteptat.",
+      "Acum am 30 și învăț să trăiesc cu mai puțin.",
+      "Cine ți-a spus și ție minciuna asta?"
+    ]
+  },
+  {
+    "lines": [
+      "Părinții mei au crezut că facultatea mă scapă.",
+      "Am terminat-o. Nimic nu s-a schimbat.",
+      "Aceiași luptă. Aceiași bani. Aceiași frică.",
+      "Și la tine a funcționat sau te-a înșelat?"
+    ]
+  }
+]</pre>
+          <input type="file" id="json-upload" accept=".json" style="display:none;" />
+          <button class="btn btn-secondary" id="btn-trigger-upload" style="width:100%;">Încarcă fișier JSON</button>
+        </div>
+        <div id="manual-status-ui" style="display:${manualScripts.length > 0 ? 'flex' : 'none'}; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:24px; font-weight:bold; color:var(--primary);" id="manual-scripts-count">${manualScripts.length}</span> 
+            <span style="font-size:14px; color:var(--text-secondary);">disponibile</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btn-replace-json">Înlocuiește JSON</button>
+        </div>
+      </div>
+    </div>
+
     ${isPro ? _renderProQtySelector() : ''}
 
     <!-- Action Buttons -->
@@ -96,7 +161,7 @@ export function renderAutoPanel(container, state, onGoToHistory) {
 
       <div style="display:flex; gap:16px;">
         <button class="btn btn-primary btn-lg" id="btn-generate-once"
-          ${(!state.pexelsApiKey || isRunning || !dailyStatus.canGenerate) ? 'disabled' : ''}
+          ${(isRunning || !dailyStatus.canGenerate) ? 'disabled' : ''}
           style="flex:1;">
           <span id="btn-once-icon">🚀</span>
           <span id="btn-once-text">Generează 1 Video</span>
@@ -157,10 +222,66 @@ export function renderAutoPanel(container, state, onGoToHistory) {
     });
   }
 
+  // ── Script Source Events ──
+  document.getElementById('btn-src-ai')?.addEventListener('click', () => {
+    if (autoLoopActive) return;
+    scriptSource = 'ai';
+    renderAutoPanel(container, state, onGoToHistory);
+  });
+
+  document.getElementById('btn-src-manual')?.addEventListener('click', () => {
+    if (autoLoopActive) return;
+    scriptSource = 'manual';
+    renderAutoPanel(container, state, onGoToHistory);
+  });
+
+  document.getElementById('btn-trigger-upload')?.addEventListener('click', () => {
+    document.getElementById('json-upload')?.click();
+  });
+
+  document.getElementById('btn-replace-json')?.addEventListener('click', () => {
+    document.getElementById('json-upload')?.click();
+  });
+
+  document.getElementById('json-upload')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target.result);
+        if (!Array.isArray(json)) throw new Error('JSON-ul trebuie să fie un Array.');
+        
+        // Normalize format: transform strings into single-item arrays or keep string arrays
+        const normalized = json.map(item => {
+          if (Array.isArray(item)) return item.map(s => String(s));
+          if (typeof item === 'string') return [item];
+          if (item && item.lines && Array.isArray(item.lines)) return item.lines.map(s => String(s));
+          return [String(item)];
+        }).filter(item => item.length > 0 && item[0].trim() !== '');
+
+        if (normalized.length === 0) throw new Error('Nu s-au găsit texte valide în JSON.');
+
+        manualScripts = normalized;
+        localStorage.setItem('viralclip_manual_scripts', JSON.stringify(manualScripts));
+        showToast(`S-au încărcat ${manualScripts.length} scripturi cu succes.`, 'success');
+        renderAutoPanel(container, state, onGoToHistory);
+      } catch (err) {
+        showToast('Eroare la citirea JSON-ului: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // reset input
+  });
+
   // ── Button events ──
   document.getElementById('btn-view-history').addEventListener('click', onGoToHistory);
 
   document.getElementById('btn-generate-once').addEventListener('click', () => {
+    if (!_state.pexelsApiKey) {
+      showToast('⚠️ Pexels API Key lipsă. ' + (getCurrentPlan().id === 'free' ? 'Administratorul trebuie să seteze cheia.' : 'Adaugă-l în setări.'), 'error');
+      return;
+    }
     const status = getDailyStatus();
     if (!status.canGenerate) {
       _showLimitModal(getCurrentPlan());
@@ -174,6 +295,10 @@ export function renderAutoPanel(container, state, onGoToHistory) {
 
   if (isPro) {
     document.getElementById('btn-autogen')?.addEventListener('click', () => {
+      if (!_state.pexelsApiKey) {
+        showToast('⚠️ Pexels API Key lipsă. Adaugă-l în setări.', 'error');
+        return;
+      }
       if (autoLoopActive) {
         stopAutoLoop('manual');
       } else {
@@ -238,7 +363,6 @@ function _renderProQtySelector() {
 function _renderProAutoGenBtn(isRunning) {
   return `
     <button class="btn-autogen pro-autogen-btn${isRunning ? ' running' : ''}" id="btn-autogen"
-      ${!_state?.pexelsApiKey ? 'disabled title="Adaugă Pexels API Key în sidebar"' : ''}
       style="width:100%; padding: 20px; font-size: 18px;">
       <span class="btn-autogen-glow"></span>
       <div class="pro-autogen-inner">
@@ -414,11 +538,25 @@ async function generateOneVideo(isLoop, totalTarget) {
       cfAccountId: _state.cfAccountId,
       cfApiToken:  _state.cfApiToken,
       pexelsApiKey: _state.pexelsApiKey,
+      scriptSource,
+      manualScripts,
       onProgress: (msg, pct) => {
         lastProgress = { msg, pct };
         updateProgress(msg, pct);
       }
     });
+
+    if (scriptSource === 'manual' && manualScripts.length > 0) {
+      manualScripts.shift();
+      localStorage.setItem('viralclip_manual_scripts', JSON.stringify(manualScripts));
+      const countEl = document.getElementById('manual-scripts-count');
+      if (countEl) countEl.textContent = manualScripts.length;
+      if (manualScripts.length === 0) {
+        document.getElementById('manual-upload-ui').style.display = 'block';
+        document.getElementById('manual-status-ui').style.display = 'none';
+        showToast('Ai rămas fără scripturi manuale! Încarcă un alt JSON.', 'info');
+      }
+    }
 
     lastProgress = { msg: '💾 Se salvează și descarcă...', pct: 95 };
     updateProgress(lastProgress.msg, lastProgress.pct);
